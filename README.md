@@ -1,0 +1,1 @@
+# synora-tech-web
