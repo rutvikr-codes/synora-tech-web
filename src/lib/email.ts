@@ -7,17 +7,24 @@ export interface EmailDispatchResult {
   isConfigured: boolean;
 }
 
+function cleanEnv(val: string | undefined): string {
+  if (!val) return "";
+  return val.trim().replace(/^["']|["']$/g, "").trim();
+}
+
 /**
  * Checks whether production email dispatch environment variables are configured.
  */
 export function isEmailConfigured(): boolean {
-  const hasResend = Boolean(process.env.RESEND_API_KEY && process.env.CONTACT_EMAIL_TO);
-  const hasSmtp = Boolean(
-    process.env.SMTP_HOST &&
-    process.env.SMTP_USER &&
-    process.env.SMTP_PASS &&
-    process.env.CONTACT_EMAIL_TO
-  );
+  const recipient = cleanEnv(process.env.CONTACT_EMAIL_TO);
+  const resendKey = cleanEnv(process.env.RESEND_API_KEY);
+  const hasResend = Boolean(resendKey.startsWith("re_") && recipient);
+
+  const smtpHost = cleanEnv(process.env.SMTP_HOST);
+  const smtpUser = cleanEnv(process.env.SMTP_USER);
+  const smtpPass = cleanEnv(process.env.SMTP_PASS);
+  const hasSmtp = Boolean(smtpHost && smtpUser && smtpPass && recipient);
+
   return hasResend || hasSmtp;
 }
 
@@ -30,9 +37,15 @@ export async function sendContactEmail(
   data: ContactFormData,
   clientIp: string
 ): Promise<EmailDispatchResult> {
-  const recipient = process.env.CONTACT_EMAIL_TO;
-  const sender = process.env.CONTACT_EMAIL_FROM || "inquiries@synoratech.in";
-  const resendApiKey = process.env.RESEND_API_KEY;
+  const recipient = cleanEnv(process.env.CONTACT_EMAIL_TO);
+  const sender = cleanEnv(process.env.CONTACT_EMAIL_FROM) || "sales@synoratech.in";
+  const resendApiKey = cleanEnv(process.env.RESEND_API_KEY);
+  const smtpHost = cleanEnv(process.env.SMTP_HOST);
+  const smtpUser = cleanEnv(process.env.SMTP_USER);
+  const smtpPass = cleanEnv(process.env.SMTP_PASS);
+
+  const isResendConfigured = Boolean(resendApiKey.startsWith("re_") && recipient);
+  const isSmtpConfigured = Boolean(smtpHost && smtpUser && smtpPass && recipient);
 
   if (!isEmailConfigured()) {
     return {
@@ -43,8 +56,8 @@ export async function sendContactEmail(
     };
   }
 
-  // If Resend API is configured
-  if (resendApiKey && recipient) {
+  // 1. If Resend API is configured with a valid 're_' API key
+  if (isResendConfigured) {
     try {
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -75,7 +88,17 @@ ${data.message}
         }),
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        const resData = await response.json();
+        return {
+          success: true,
+          isConfigured: true,
+          messageId: resData.id || "resend-ok",
+        };
+      }
+
+      // If Resend failed and SMTP is NOT available, return the Resend error
+      if (!isSmtpConfigured) {
         const errJson = await response.json().catch(() => ({}));
         return {
           success: false,
@@ -83,43 +106,38 @@ ${data.message}
           error: `Email provider error: ${errJson.message || response.statusText}`,
         };
       }
-
-      const resData = await response.json();
-      return {
-        success: true,
-        isConfigured: true,
-        messageId: resData.id || "resend-ok",
-      };
+      // Otherwise fallback to SMTP
+      console.warn("Resend dispatch failed, attempting SMTP fallback...");
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : "Unknown transmission error";
-      return {
-        success: false,
-        isConfigured: true,
-        error: `Failed to dispatch email: ${errorMsg}`,
-      };
+      if (!isSmtpConfigured) {
+        const errorMsg = err instanceof Error ? err.message : "Unknown transmission error";
+        return {
+          success: false,
+          isConfigured: true,
+          error: `Failed to dispatch email: ${errorMsg}`,
+        };
+      }
+      console.warn("Resend transmission error, attempting SMTP fallback...");
     }
   }
 
-  // If SMTP is configured
-  if (
-    process.env.SMTP_HOST &&
-    process.env.SMTP_USER &&
-    process.env.SMTP_PASS &&
-    recipient
-  ) {
+  // 2. If SMTP is configured
+  if (isSmtpConfigured) {
     try {
       const nodemailer = await import("nodemailer");
+      const smtpPort = parseInt(cleanEnv(process.env.SMTP_PORT) || "465", 10);
       const isSecure =
-        process.env.SMTP_SECURE === "true" || process.env.SMTP_PORT === "465";
+        cleanEnv(process.env.SMTP_SECURE) === "true" || smtpPort === 465;
 
       const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || "587", 10),
+        host: smtpHost,
+        port: smtpPort,
         secure: isSecure,
         auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+          user: smtpUser,
+          pass: smtpPass,
         },
+        connectionTimeout: 10000,
       });
 
       const info = await transporter.sendMail({
