@@ -120,30 +120,44 @@ export function Navbar() {
             <div className="flex md:hidden">
               <button
                 type="button"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                onClick={() => setMobileMenuOpen(true)}
                 className="inline-flex items-center justify-center p-2 rounded-lg text-slate-grey hover:text-cloud-white hover:bg-deep-slate focus:outline-none focus-visible:ring-2 focus-visible:ring-electric-indigo"
                 aria-expanded={mobileMenuOpen}
-                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                aria-label="Open menu"
               >
-                {mobileMenuOpen ? (
-                  <X className="block h-6 w-6" aria-hidden="true" />
-                ) : (
-                  <Menu className="block h-6 w-6" aria-hidden="true" />
-                )}
+                <Menu className="block h-6 w-6" aria-hidden="true" />
               </button>
             </div>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div
-            className="md:hidden fixed inset-x-0 top-20 bottom-0 bg-midnight/98 backdrop-blur-xl border-t border-slate-800 z-50 flex flex-col p-6 animate-in fade-in duration-200 overflow-y-auto"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Mobile Navigation Menu"
-          >
-            <nav className="flex flex-col space-y-2 pt-2">
+      {/* Mobile Navigation Full-Screen Overlay & Drawer */}
+      {mobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-50 flex flex-col bg-[#0B1020] overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile Navigation Menu"
+        >
+          {/* Top Bar inside Drawer: Logo + Close Button */}
+          <div className="flex items-center justify-between h-20 px-4 sm:px-6 border-b border-slate-800 bg-[#0B1020]">
+            <div className="flex-shrink-0">
+              <SynoraLogo variant="dark" size="md" />
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              className="inline-flex items-center justify-center p-2 rounded-lg text-slate-grey hover:text-cloud-white hover:bg-deep-slate focus:outline-none focus-visible:ring-2 focus-visible:ring-electric-indigo"
+              aria-label="Close menu"
+            >
+              <X className="block h-6 w-6" aria-hidden="true" />
+            </button>
+          </div>
+
+          {/* Nav Links & CTA */}
+          <div className="flex-1 flex flex-col justify-between p-6">
+            <nav className="flex flex-col space-y-2 pt-2" aria-label="Mobile Navigation">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
@@ -151,13 +165,18 @@ export function Navbar() {
                     key={item.name}
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                    className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-base font-medium transition-all ${
                       isActive
-                        ? "text-cloud-white bg-deep-slate border border-slate-700/60"
-                        : "text-slate-grey hover:text-cloud-white hover:bg-deep-slate/40"
+                        ? "text-cloud-white bg-deep-slate border border-slate-700/80 shadow-inner"
+                        : "text-slate-300 hover:text-cloud-white hover:bg-deep-slate/50 border border-transparent"
                     }`}
                   >
-                    {item.name}
+                    <span>{item.name}</span>
+                    <ArrowRight
+                      className={`w-4 h-4 transition-transform ${
+                        isActive ? "text-electric-indigo" : "text-slate-500"
+                      }`}
+                    />
                   </Link>
                 );
               })}
@@ -167,7 +186,7 @@ export function Navbar() {
               <Link
                 href="/contact"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full flex items-center justify-center gap-2 px-5 py-3.5 text-base font-medium text-white bg-electric-indigo hover:bg-indigo-600 rounded-lg shadow-md transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-5 py-3.5 text-base font-semibold text-white bg-electric-indigo hover:bg-indigo-600 active:scale-[0.99] rounded-xl shadow-lg shadow-indigo-500/20 transition-all"
               >
                 <span>Discuss Your Use Case</span>
                 <ArrowRight className="w-5 h-5" />
@@ -177,8 +196,8 @@ export function Navbar() {
               </p>
             </div>
           </div>
-        )}
-      </header>
+        </div>
+      )}
     </>
   );
 }
