@@ -1,0 +1,22 @@
+<svg width="220" height="48" viewBox="0 0 220 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoDarkGrad" x1="6" y1="8" x2="42" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="50%" stop-color="#818CF8" />
+      <stop offset="100%" stop-color="#A5B4FC" />
+    </linearGradient>
+  </defs>
+  <!-- Symbol -->
+  <rect x="2" y="2" width="44" height="44" rx="12" fill="#151D33" stroke="rgba(99, 102, 241, 0.25)" stroke-width="1.5"/>
+  <path d="M34 14C34 14 32 10 24 10C16 10 13 15 13 19C13 24 18 26 24 28" stroke="url(#logoDarkGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24 28C30 30 35 32 35 37C35 41 32 46 24 46C16 46 14 42 14 42" stroke="url(#logoDarkGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="24" cy="28" r="3" fill="#FFFFFF" />
+  <circle cx="24" cy="28" r="5" stroke="#6366F1" stroke-width="1.5" />
+  <circle cx="34" cy="14" r="2.2" fill="#A5B4FC" />
+  <circle cx="14" cy="42" r="2.2" fill="#6366F1" />
+  
+  <!-- Wordmark -->
+  <text x="58" y="26" font-family="'Space Grotesk', -apple-system, sans-serif" font-weight="700" font-size="20" fill="#F8FAFC" letter-spacing="-0.02em">SYNORA</text>
+  <circle cx="150" cy="22" r="3" fill="#6366F1"/>
+  <text x="59" y="38" font-family="'Inter', -apple-system, sans-serif" font-weight="500" font-size="9" fill="#94A3B8" letter-spacing="0.22em">TECHNOLOGIES</text>
+</svg>
